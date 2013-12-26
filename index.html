@@ -24,9 +24,7 @@
 		<link rel="stylesheet" href="css/theorems.css">
 
 		<!-- For printing -->
-		<!--
 		<link rel="stylesheet" href="css/print/pdf.css">
-		-->
 
 		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
 		<script>
@@ -45,9 +43,9 @@
 			<!-- Any section element inside of this container is displayed as a slide -->
 			<div class="slides">
 				<section>
-					<h2>CUDA Lab</h2>
+					<h1>CUDA Lab</h1>
 					<p>
-					<small><a href="lsalab.cs.nthu.edu.tw/home">LSALab</a></small>
+					<a href="lsalab.cs.nthu.edu.tw/home">LSALab</a>
 					</p>
 				</section>
 
@@ -89,11 +87,20 @@
 						<h2>Compiler: nvcc</h2>
 						<p>
 						Usage (like gcc):
-						<pre><code class="cpp" data-trim>
+						<pre><code class="shell" data-trim>
+# compile to object file (do not link)
 $ nvcc -c a.cu -o a.o
+						</code></pre>
+						<pre><code class="shell" data-trim>
+# compile to executable file
 $ nvcc a.cu -o a.out
 						</code></pre>
+						<pre><code class="shell" data-trim>
+# generate PTX intermediate assembly file
+$ nvcc -ptx a.cu
+						</code></pre>
 						</p>
+<!--						
 						<p>
 						Sample Makefile
 						<pre><code class="cpp" data-trim>
@@ -110,9 +117,11 @@ clean:
         rm *.o
 						</code></pre>
 						</p>
+-->						
 					</section>
 					<section>
 						<h2>Compiler: nvcc</h2>
+						<h2>Interesting Usages</h2>
 						<p>
 						Printing code generation statistics:
 						<pre><code class="cpp" data-trim>
@@ -121,7 +130,16 @@ ptxas info   : Compiling entry function 'acos_main'
 ptxas info   : Used 4 registers, 60+56 bytes lmem, 44+40 bytes smem, 
                20 bytes cmem[1], 12 bytes cmem[14]
 						</code></pre>
+						<pre><code class="shell" data-trim>
+-Xptxas
+--ptxas-options
+	 Specify options directly to the ptx optimizing assembler.
+						</code></pre>
 						</p>
+					<aside class="notes">
+As shown in the above example, the amounts of local and shared memory are listed by two numbers each. First number represents the total size of all the variables declared in that memory segment and the second number represents the amount of system allocated data. The amount and location of system allocated data as well as the allocation of constant variables to constant banks is profile specific. For constant memory, the total space allocated in that bank is shown.
+					</aside>
+
 					</section>
 					<section>
 						<h2>cuda-memcheck</h2>
@@ -228,9 +246,6 @@ $ cuda-memcheck [executable-program]
 						<p>
 						Example:
 						<pre><code class="shell" data-trim>
-$ nvidia-smi -q -d TEMPERATURE
-						</code></pre>
-						<pre><code class="shell" data-trim>
 $ nvidia-smi
 Wed Dec 25 08:16:21 2013       
 +------------------------------------------------------+                       
@@ -252,6 +267,9 @@ Wed Dec 25 08:16:21 2013
 |=============================================================================|
 |    0     33736  ./RS                                                  69MB  |
 +-----------------------------------------------------------------------------+
+						</code></pre>
+						<pre><code class="shell" data-trim>
+$ nvidia-smi -q -d [TEMPERATURE|MEMORY|POWER|CLOCK|...]
 						</code></pre>
 						</p>
 					</section>
@@ -284,17 +302,27 @@ Device 0: "Tesla K20Xm"
   Max dimension size of a grid size    (x,y,z): (2147483647, 65535, 65535)
 					</code></pre>
 					</p>
+					<aside class="notes">
+CUDA cores, max block/grid size, shared mem
+					</aside>
 				</section>
 
 				<section>
 					<section>
 						<h2>Our Tasks</h2>
 						<p>
-						Implement four version of GPU parallel reduction algorithm to calculate the sum of an array.
+						<ul>
+							<li>
+							Rewrite the CPU sequential program into a CUDA program to increase each element of an array by one. The element number in this array is set to 1024.
+							</li>
+							<li>
+							Implement four version of GPU parallel reduction algorithm to calculate the sum of an array. You will have to fill in a template CUDA program and test their performance.
+							</li>
+						</ul>
 						</p>
 					</section>
 					<section>
-						<h2>Measuring Kernel Execution Time Using CUDA GPU Timers</h2>
+						<h2>How to Measure Kernel Execution Time Using CUDA GPU Timers</h2>
 						<p>
 						<pre><code class="c" data-trim>
 cudaEvent_t start, stop;
@@ -314,7 +342,7 @@ cudaEventDestroy( stop );
 						</code></pre>
 						</p>
 						<p>
-						NOTE: The cudaEventElapsedTime() function returns the time elapsed between the recording of the start and stop events. This value is expressed in milliseconds and has a resolution of approximately half a microsecond.
+						NOTE: The cudaEventElapsedTime() function returns the time elapsed between the recording of the start and stop events. This value is expressed in milliseconds.
 						</p>
 					</section>
 				</section>
