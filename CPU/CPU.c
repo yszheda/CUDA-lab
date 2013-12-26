@@ -2,15 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-void initArray(int *array, const int elemNum)
-{
-	int i;
-	for (i = 0; i < elemNum; ++i)
-	{
-		array[i] = i % 1024;
-	}
-}
-
 int getSum(const int *array, const int elemNum)
 {
 	int i;
@@ -31,7 +22,18 @@ int main(int argc, char *argv[])
 	int *h_idata;
 
 	h_idata = malloc(arraySize);
-	initArray(h_idata, elemNum);
+	
+	FILE *fp;
+	if((fp = fopen(argv[1], "rb")) == NULL)
+	{
+		printf("Can not open input file!\n");
+		exit(0);
+	}
+	int i;
+	for (i = 0; i < arraySize; ++i)
+	{
+		fscanf(fp, "%d", &h_idata[i]);
+	}
 
 	struct timespec start, end;
 	double totalTime;
