@@ -27,15 +27,6 @@ __global__ void reduce(int *g_idata, int *g_odata)
 	}
 }
 
-void initArray(int *array, const int elemNum)
-{
-	int i;
-	for (i = 0; i < elemNum; ++i)
-	{
-		array[i] = i % 1024;
-	}
-}
-
 int main(int argc, char *argv[])
 {
 	// We assume that the element number is the power of 2 for simplification.
@@ -50,7 +41,17 @@ int main(int argc, char *argv[])
 
 	// initialize input data
 	h_idata = (int *) malloc(arraySize);
-	initArray(h_idata, elemNum);
+	FILE *fp;
+	if((fp = fopen(argv[1], "rb")) == NULL)
+	{
+		printf("Can not open input file!\n");
+		exit(0);
+	}
+	for (int i = 0; i < elemNum; ++i)
+	{
+		fscanf(fp, "%d", &h_idata[i]);
+	}
+	fclose(fp);
 
 	// copy input data from CPU to GPU
 	cudaMalloc((void **) &d_idata, arraySize);

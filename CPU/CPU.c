@@ -30,10 +30,11 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 	int i;
-	for (i = 0; i < arraySize; ++i)
+	for (i = 0; i < elemNum; ++i)
 	{
 		fscanf(fp, "%d", &h_idata[i]);
 	}
+	fclose(fp);
 
 	struct timespec start, end;
 	double totalTime;

@@ -1,4 +1,6 @@
 CC = clang
+# CC = gcc
+# CC = icc
 CCFLAGS = -O3
 LDFLAGS = -lrt
 SRCS = $(wildcard *.c)

@@ -1,7 +1,7 @@
 NVCC = nvcc
-CCFLAGS = 
+CCFLAGS = -O3
 NVCCFLAGS = 
-LDFLAGS = -lrt
+LDFLAGS = 
 SRCS = $(wildcard *.cu)
 OBJS = $(patsubst %.cu, %.o, $(SRCS))
 all:$(OBJS)

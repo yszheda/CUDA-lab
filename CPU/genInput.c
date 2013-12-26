@@ -6,9 +6,8 @@ int main(int argc, char *argv[])
 {
 	// We assume that the element number is the power of 2 for simplification.
 	const int elemNum = 1 << 22;
-	int arraySize = elemNum * sizeof(int);
 	// host memory
-	int array[arraySize];
+	int array[elemNum];
 
 	int i;
 	for (i = 0; i < elemNum; ++i)
