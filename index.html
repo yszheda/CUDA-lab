@@ -4,10 +4,10 @@
 	<head>
 		<meta charset="utf-8">
 
-		<title>Accelerate Reed-Solomon coding for Fault-Tolerance in RAID-like System</title>
+		<title>CUDA Lab</title>
 
-		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
-		<meta name="author" content="Hakim El Hattab">
+		<meta name="description" content="slides for CUDA lab, parallel programming course">
+		<meta name="author" content="Shuai YUAN">
 
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -24,7 +24,11 @@
 		<link rel="stylesheet" href="css/theorems.css">
 
 		<!-- For printing -->
+		<!--
 		<link rel="stylesheet" href="css/print/pdf.css">
+		-->
+
+		<link rel="stylesheet" href="css/ys.css">
 
 		<!-- If the query includes 'print-pdf', use the PDF print sheet -->
 		<script>
@@ -45,30 +49,171 @@
 				<section>
 					<h1>CUDA Lab</h1>
 					<p>
-					<a href="lsalab.cs.nthu.edu.tw/home">LSALab</a>
+					<h3><a href="lsalab.cs.nthu.edu.tw/home">LSALab</a></h3>
 					</p>
 				</section>
 
 				<section>
 					<h2>Overview</h2>
 					<ul>
+						<li>Programming Environment</li>
+						<li>Compile & Run CUDA program</li>
 						<li>CUDA Tools</li>
-						<li>Information of Our GPU Devices</li>
 						<li>Lab Tasks</li>
+						<li>CUDA Programming Tips</li>
+						<li>References</li>
 					</ul>
 
+
+				</section>
+
+				<section>
+					<section>
+						<h2>GPU Server</h2>
+						<ul>
+							<li>Intel E5-2670 V2 10Cores CPU X 2</li>
+							<li>NVIDIA K20X GPGPU CARD X 2</li>
+						</ul>
+						<br>
+						<ul class="zxx_align_box_4 fix">
+					    <li>
+							<div><img src="images/cpu.jpg"  alt="Intel E5" /></div>
+							<div><img src="images/gpu.jpg"  alt="NVIDIA K20X" /></div>
+					    </li>
+						</ul>
+					</section>
+					<section>
+					<p>
+					Command to get your GPGPU HW spec:
+					<pre><code class="shell" data-trim contenteditable>
+$ /usr/local/cuda/samples/1_Utilities/deviceQuery/deviceQuery
+					</code></pre>
+					</p>
+					<p>
+					<pre><code class="text" data-trim>
+Device 0: "Tesla K20Xm"
+  CUDA Driver Version / Runtime Version          5.5 / 5.5
+  CUDA Capability Major/Minor version number:    3.5
+  Total amount of global memory:                 5760 MBytes (6039339008 bytes)
+  (14) Multiprocessors, (192) CUDA Cores/MP:     2688 CUDA Cores
+  GPU Clock rate:                                732 MHz (0.73 GHz)
+  Memory Clock rate:                             2600 Mhz
+  Memory Bus Width:                              384-bit
+  L2 Cache Size:                                 1572864 bytes
+  Total amount of constant memory:               65536 bytes
+  Total amount of shared memory per block:       49152 bytes
+  Total number of registers available per block: 65536
+  Warp size:                                     32
+  Maximum number of threads per multiprocessor:  2048
+  Maximum number of threads per block:           1024
+  Max dimension size of a thread block (x,y,z): (1024, 1024, 64)
+  Max dimension size of a grid size    (x,y,z): (2147483647, 65535, 65535)
+					</code></pre>
+					</p>
+					<p>
+						Official HW Spec details: 
+						<br><a href="http://www.nvidia.com/object/tesla-servers.html">http://www.nvidia.com/object/tesla-servers.html</a>
+					</p>
 					<aside class="notes">
-						Oh hey, these are some notes. They'll be hidden in your presentation, but you can see them if you open the speaker notes window (hit 's' on your keyboard).
+CUDA cores, max block/grid size, shared mem
 					</aside>
+					</section>
+				</section>
+
+				<section>
+					<section>
+						<h2>Compile & Run CUDA</h2>
+						<ul>
+							<li>Directly compile to executable code</li>
+							<pre><code class="shell" data-trim>
+# compile the source code to executable file
+$ nvcc a.cu -o a.out
+							</code></pre>
+							<li>Two-Stage compile</li>
+							<pre><code class="shell" data-trim>
+# compile the source code to object file
+$ nvcc -c a.cu -o a.o
+# link the object file(s) to executable file
+$ nvcc a.o -o a.out
+							</code></pre>							
+						</ul>
+					</section>
+					<section>
+						<h2>Compile & Run CUDA</h2>
+						<img  src="images/nvcc.png" align=right border=0>
+						<p>
+							The nvcc compiler will translate CUDA source code into Parallel Thread Execution (PTX) language in the intermediate phase.
+
+						<pre><code class="shell" data-trim>
+# generate PTX file
+$ nvcc -ptx a.cu
+						</code></pre>
+						<pre><code class="shell" data-trim>
+# keep all intermediate phase files
+$ nvcc a.cu -keep
+# or
+$ nvcc a.cu -save-temps
+						</code></pre>
+						<pre><code class="shell" data-trim>
+# clean all intermediate phase files
+$ nvcc a.cu -keep -clean					
+						</code></pre>
+						</p>
+						<br clear=left>
+						<aside class="notes">
+						PTX provides a stable programming model and instruction set for general purpose parallel programming. It is designed to be efficient on NVIDIA GPUs.
+						</aside>
+					</section>
+					<section>
+						<h2>Useful NVCC Usage</h2>
+						<p>
+						Print code generation statistics:
+						<pre><code class="cpp" data-trim>
+$ nvcc -Xptxas -v reduce.cu
+ptxas info    : 0 bytes gmem
+ptxas info    : Compiling entry function '_Z6reducePiS_' for 'sm_10'
+ptxas info    : Used 6 registers, 32 bytes smem, 4 bytes cmem[1]
+						</code></pre>
+						<pre><code class="shell" data-trim>
+-Xptxas
+--ptxas-options
+	 Specify options directly to the ptx optimizing assembler.
+						</code></pre>
+						</p>
+						<p style="font-size:16px" align="left">
+							<ul>
+							<li>
+							register number: should be less than the number of available registers, otherwises the rest registers will be mapped into the local memory (off-chip).
+							</li>
+							<li>
+							smem stands for shared memory.
+							</li>
+							<li>
+							cmem stands for constant memory. The bank-#1 constant memory stores 4 bytes of constant variables.
+							</li>
+							</ul>
+						</p>
+					<aside class="notes">
+As shown in the above example, the amounts of local and shared memory are listed by two numbers each. First number represents the total size of all the variables declared in that memory segment and the second number represents the amount of system allocated data. The amount and location of system allocated data as well as the allocation of constant variables to constant banks is profile specific. For constant memory, the total space allocated in that bank is shown.
+					</aside>
+						</p>
+					</section>
 				</section>
 
 				<!-- Example of nested vertical slides -->
 				<section>
 					<section>
 						<h2>CUDA Tools</h2>
-						<p>
-						</p>
+						<ul>
+							<li>
+								cuda-memcheck: functional correctness checking suite.
+							</li>
+							<li>
+								nvidia-smi: NVIDIA System Management Interface
+							</li>
+						</ul>
 					</section>
+				<!--
 					<section>
 						<h2>Compiler: nvcc</h2>
 						<p>
@@ -100,7 +245,6 @@ $ nvcc a.cu -o a.out
 $ nvcc -ptx a.cu
 						</code></pre>
 						</p>
-<!--						
 						<p>
 						Sample Makefile
 						<pre><code class="cpp" data-trim>
@@ -117,7 +261,6 @@ clean:
         rm *.o
 						</code></pre>
 						</p>
--->						
 					</section>
 					<section>
 						<h2>Compiler: nvcc</h2>
@@ -139,13 +282,17 @@ ptxas info   : Used 4 registers, 60+56 bytes lmem, 44+40 bytes smem,
 					<aside class="notes">
 As shown in the above example, the amounts of local and shared memory are listed by two numbers each. First number represents the total size of all the variables declared in that memory segment and the second number represents the amount of system allocated data. The amount and location of system allocated data as well as the allocation of constant variables to constant banks is profile specific. For constant memory, the total space allocated in that bank is shown.
 					</aside>
-
 					</section>
+-->
 					<section>
 						<h2>cuda-memcheck</h2>
-						<p>
+						<p align="left">
+						<!--	
 						Recommended for checking errors of your program
-<table summary="" id="supported-error-detection__memcheck-error-types" class="table" frame="border" border="1" rules="all" style="font-size: 16px">
+						-->
+						This tool checks the following memory errors of your program, and it also reports hardware exceptions encountered by the GPU.
+						</p>
+<table summary="" id="supported-error-detection__memcheck-error-types" class="table" frame="border"rules="all" border="1" style="font-size: 20px;border-style:solid;border-color:black;line-height:120%">
                         <caption><span class="tablecap">Table . Memcheck reported error types</span></caption>
                         <thead class="thead" align="left">
                            <tr class="row">
@@ -227,21 +374,122 @@ As shown in the above example, the amounts of local and shared memory are listed
                            </tr>
                         </tbody>
                      </table>
-						</p>
 					</section>
 					<section>
 						<h2>cuda-memcheck</h2>
 						<p>
+							These errors may not cause program crash, but they could unexpected program and memory misusage. 
+						</p>
+<!--
 						Usage:
 						<pre><code class="shell" data-trim>
 $ cuda-memcheck [executable-program]
 						</code></pre>
+-->
+					</section>
+					<section>
+						<h2>cuda-memcheck</h2>
+						<h3>Example</h3>
+						<p>Program with double free fault</p>
+						<pre><code class="c" data-trim>
+int main(int argc, char *argv[])
+{
+	const int elemNum = 1024;
+	int h_data[elemNum];
+	int *d_data;
+	initArray(h_data);
+	int arraySize = elemNum * sizeof(int);
+	cudaMalloc((void **) &d_data, arraySize);
+	incrOneForAll<<< 1, 1024 >>>(d_data);
+	cudaMemcpy((void **) &h_data, d_data, arraySize, cudaMemcpyDeviceToHost);
+	cudaFree(d_data);
+	cudaFree(d_data);	// fault
+	printArray(h_data);
+	return 0;
+}							
+						</code></pre>
+						<!--
+						<pre><code class="c" data-trim>
+#include < stdio.h >
+#include < stdlib.h >
+#include < cuda.h >
+
+const int elemNum = 1024;
+
+// increase one for all the elements
+__global__ void incrOneForAll(int *array)
+{
+        array[threadIdx.x] ++;
+}
+
+void initArray(int *array)
+{
+        int i;
+        for (i = 0; i < elemNum; ++i)
+        {
+                array[i] = i;
+        }
+}
+
+void printArray(const int *array)
+{
+        int i;
+        for (i = 0; i < elemNum; ++i)
+        {
+                printf("%d ", array[i]);
+        }
+}
+
+int main(int argc, char *argv[])
+{
+        // host memory
+        int h_data[elemNum];
+        int *d_data;
+
+        initArray(h_data);
+
+        // copy input data from CPU to GPU
+        int arraySize = elemNum * sizeof(int);
+        cudaMalloc((void **) &d_data, arraySize);
+        cudaMemcpy(d_data, h_data, arraySize, cudaMemcpyHostToDevice);
+
+        incrOneForAll<<< 1, 1024 >>>(d_data);
+
+        cudaMemcpy((void **) &h_data, d_data, arraySize, cudaMemcpyDeviceToHost);
+
+        cudaFree(d_data);
+        cudaFree(d_data);	// fault
+
+        printArray(h_data);
+        return 0;
+}							
+						</code></pre>
+					-->
+					</section>
+					<section>
+						<h2>cuda-memcheck</h2>
+						<h3>Example</h3>
+						<pre><code class="shell" data-trim>
+$ nvcc -g -G example.cu
+$ cuda-memcheck ./a.out
+========= CUDA-MEMCHECK
+========= Program hit error 17 on CUDA API call to cudaFree
+=========     Saved host backtrace up to driver entry point at error
+=========     Host Frame:/usr/lib64/libcuda.so [0x26d660]
+=========     Host Frame:./a.out [0x42af6]
+=========     Host Frame:./a.out [0x2a29]
+=========     Host Frame:/lib64/libc.so.6 (__libc_start_main + 0xfd) [0x1ecdd]
+=========     Host Frame:./a.out [0x2769]
+=========						
+						</code></pre>
+						<p>
+						No error is shown if it is run directly, but CUDA-MEMCHECK can detect the error.
 						</p>
 					</section>
 					<section>
-						<h2>nvidia-smi</h2>
+						<h2>NVIDIA System Management Interface (NVIDIA-SMI)</h2>
 						<p>
-						NVIDIA System Management Interface: Query and modify GPU devices' state.
+						Purpose: Query and modify GPU devices' state.
 						</p>
 						<p>
 						Example:
@@ -268,63 +516,217 @@ Wed Dec 25 08:16:21 2013
 |    0     33736  ./RS                                                  69MB  |
 +-----------------------------------------------------------------------------+
 						</code></pre>
+						</p>
+					</section>
+					<section>
+						<h2>nvidia-smi</h2>
+						<p>
+						You can query more specific information on temperature, memory, power, etc.
+						</p>
 						<pre><code class="shell" data-trim>
 $ nvidia-smi -q -d [TEMPERATURE|MEMORY|POWER|CLOCK|...]
 						</code></pre>
-						</p>
 					</section>
 				</section>
 
 				<section>
-					<h2>Information of Our Devicies</h2>
-					<p>
-					You can execute the following command on our machine to obtain the detailed information:
-					<pre><code class="shell" data-trim contenteditable>
-$ /usr/local/cuda/samples/1_Utilities/deviceQuery/deviceQuery
-					</code></pre>
-					<pre><code class="text" data-trim>
-Device 0: "Tesla K20Xm"
-  CUDA Driver Version / Runtime Version          5.5 / 5.5
-  CUDA Capability Major/Minor version number:    3.5
-  Total amount of global memory:                 5760 MBytes (6039339008 bytes)
-  (14) Multiprocessors, (192) CUDA Cores/MP:     2688 CUDA Cores
-  GPU Clock rate:                                732 MHz (0.73 GHz)
-  Memory Clock rate:                             2600 Mhz
-  Memory Bus Width:                              384-bit
-  L2 Cache Size:                                 1572864 bytes
-  Total amount of constant memory:               65536 bytes
-  Total amount of shared memory per block:       49152 bytes
-  Total number of registers available per block: 65536
-  Warp size:                                     32
-  Maximum number of threads per multiprocessor:  2048
-  Maximum number of threads per block:           1024
-  Max dimension size of a thread block (x,y,z): (1024, 1024, 64)
-  Max dimension size of a grid size    (x,y,z): (2147483647, 65535, 65535)
-					</code></pre>
-					</p>
-					<aside class="notes">
-CUDA cores, max block/grid size, shared mem
-					</aside>
+					<section>
+						<h2>Lab Assignments</h2>
+						<p>
+						<ol>
+							<li>
+							SUM CUDA programming with "multi-kernel and shared memory"
+							</li>
+							<li>
+							SUM CUDA programming with "interleaved addressing"
+							</li>
+							<li>
+							SUM CUDA programming with "sequential addressing"
+							</li>
+							<li>
+							SUM CUDA programming with "first add during load"
+							</li>
+						</ol>
+						</p>
+						<p>
+						Report your GPU BW (bandwidth) to TA after you finish each assignment.
+						</p>
+					</section>
+					<section>
+						<h2>Labs Assignment #1</h2>
+						<ul>
+							<li>
+							Given $10^{22}$ numbers, each block has the maximum block size $10^{10}$
+							</li>
+							<li>
+							How to use 3 kernel to synchronize between iterations?
+							</li>							
+						</ul>
+						<img src="images/program-structure.png" alt="program structure"/>
+					</section>
+					<section>
+						<h2>Labs Assignment #1</h2>
+						<ul>
+							<li>
+							Implement the naïve data parallelism assignment as follows:
+							</li>							
+						</ul>
+						<img src="images/task1.png" alt="task#1"/>
+					</section>
+					<section>
+						<h2>Labs Assignment #2</h2>
+						<ul>
+							<li>
+							Reduce number of diverge branches of your program:
+							</li>							
+						</ul>
+						<img src="images/task2.png" alt="task#2"/>
+					</section>
+					<section>
+						<h2>Labs Assignment #3</h2>
+						<ul>
+							<li>
+							Prevent shared memory access bank confliction:
+							</li>							
+						</ul>
+						<img src="images/task3.png" alt="task#3"/>
+					</section>
+					<section>
+						<h2>Labs Assignment #4</h2>
+						<ul>
+							<li>
+							Reduce the number of blocks in each kernel
+							</li>
+							<li>
+							Notice:
+							<ul>
+								<li>
+								Only 2 kernels are needed in this case because each kernel can now process twice amount of data than before.	
+								</li>
+								<li>
+								Global memory should be accessed in a sequential addressing way.
+								</li>							
+							</ul>
+							</li>							
+						</ul>
+						<img src="images/task4.png" alt="task#4"/>
+					</section>
 				</section>
+
 
 				<section>
 					<section>
-						<h2>Our Tasks</h2>
+						<h2>CUDA Programming Tips</h2>
+					</section>
+					<section>
+						<h2>Kernel Launch</h2>
 						<p>
+						<pre><code data-trim>
+mykernel <<< gridSize, blockSize, sMemSize, streamID >>> (args);
+						</pre></code>
 						<ul>
 							<li>
-							Rewrite the CPU sequential program into a CUDA program to increase each element of an array by one. The element number in this array is set to 1024.
+								gridSize: number of blocks per grid
 							</li>
 							<li>
-							Implement four version of GPU parallel reduction algorithm to calculate the sum of an array. You will have to fill in a template CUDA program and test their performance.
+								blockSize: number of threads per block
+							</li>
+							<li>
+								sMemSize[optional]: shared memory size (in bytes)
+							</li>
+							<li>
+								streamID[optional]: stream ID, default is 0
+							</li>
+						</ul>
+						</p>
+					</section>
+					<section>
+						<h2>Built-in Variables for Indexing in a Kernel Function</h2>
+						<ul>
+							<li>
+								blockIdx.x, blockIdx.y, blockIdx.z: block index
+							</li>
+							<li>
+								threadIdx.x, threadIdx.y, threadIdx.z: thread index
+							</li>
+							<li>
+								gridDim.x, gridDim.y, gridDim.z: grid size (number of blocks per grid) per dimension
+							</li>
+							<li>
+								blockDim.x, blockDim.y, blockDim.z: block size (number of threads per block) per dimension
+							</li>
+						</ul>
+					</section>
+					<section>
+						<h2>cudaMemcpy</h2>
+						<pre><code data-trim>
+cudaError_t cudaMemcpy ( void *dst,
+const void *src,
+size_t 	count,
+enum cudaMemcpyKind kind	 
+)	
+						</pre></code>
+						<p>
+						Enumerator:
+						<ul>
+							<li>
+							cudaMemcpyHostToHost: Host -> Host
+							</li>
+							<li>
+							cudaMemcpyHostToDevice: Host -> Device
+							</li>
+							<li>
+							cudaMemcpyDeviceToHost; Device -> Host
+							</li>
+							<li>
+							cudaMemcpyDeviceToDevice: Device -> Device
+							</li>
+							</ul>
+						</p>
+					</section>
+					<section>
+						<h2>Synchronization</h2>
+						<ul>
+							<li>
+								__synthread(): synchronizes all threads in a block (used inside the kernel function).
+							</li>
+							<li>
+								cudaDeviceSynchronize(): blocks until the device has completed all preceding requested tasks (used between two kernel launches).
+								<pre><code data-trim>
+kernel1 <<< gridSize, blockSize >>> (args);
+cudaDeviceSynchronize();
+kernel2 <<< gridSize, blockSize >>> (args);									
+								</pre></code>
+							</li>
+						</ul>
+					</section>
+					<section>
+						<h2>How to Measure Kernel Execution Time Using CUDA GPU Timers</h2>
+						<p>
+						Methods:
+						<ul>
+							<li>
+								cudaEventCreate(): init timer
+							</li>
+							<li>
+								cudaEventDestory(): destory timer
+							</li>
+							<li>
+								cudaEventRecord(): set timer
+							</li>
+							<li>
+								cudaEventSynchronize(): sync timer after each kernel call
+							</li>
+							<li>
+								cudaEventElapsedTime(): returns the elapsed time in milliseconds
 							</li>
 						</ul>
 						</p>
 					</section>
 					<section>
 						<h2>How to Measure Kernel Execution Time Using CUDA GPU Timers</h2>
-						<p>
-						<pre><code class="c" data-trim>
+						Example:
+						<pre><code data-trim>
 cudaEvent_t start, stop;
 float time;
 
@@ -332,24 +734,52 @@ cudaEventCreate(&start);
 cudaEventCreate(&stop);
 
 cudaEventRecord( start, 0 );
-kernel<<<grid,threads>>> (d_idata, d_odata);
+kernel<<< grid,threads >>> (d_idata, d_odata);
 cudaEventRecord( stop, 0 );
 cudaEventSynchronize( stop );
 
 cudaEventElapsedTime( &time, start, stop );
 cudaEventDestroy( start );
 cudaEventDestroy( stop );
-						</code></pre>
-						</p>
+						</pre></code>
+						<!--
 						<p>
 						NOTE: The cudaEventElapsedTime() function returns the time elapsed between the recording of the start and stop events. This value is expressed in milliseconds.
 						</p>
+						-->
 					</section>
 				</section>
 
 				<section>
+					<h2>References</h2>
+					<ol>
+						<li>
+							<a href="http://docs.nvidia.com/cuda/cuda-runtime-api/">NVIDIA CUDA Runtime API</a>
+						</li>
+						<li>
+							<a href="http://docs.nvidia.com/cuda/cuda-c-programming-guide/">Programming Guide :: CUDA Toolkit Documentation</a>
+						</li>
+						<li>
+							<a href="http://docs.nvidia.com/cuda/cuda-c-best-practices-guide/">Best Practices Guide :: CUDA Toolkit Documentation</a>
+						</li>
+						<li>
+							<a href="http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/">NVCC :: CUDA Toolkit Documentation</a>
+						</li>
+						<li>
+							<a href="http://docs.nvidia.com/cuda/cuda-memcheck/">CUDA-MEMCHECK :: CUDA Toolkit Documentation</a>
+						</li>
+						<li>
+							<a href="http://developer.download.nvidia.com/compute/cuda/5_5/rel/nvml/nvidia-smi.5.319.43.pdf">nvidia-smi documentation</a>
+						</li>
+						<li>
+							<a href="http://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html#group__CUDART__TYPES_1g3f51e3575c2178246db0a94a430e0038">CUDA error types</a>
+						</li>
+					</ol>
+				</section>
+
+				<section>
 					<h1>THE END</h1>
-					<h3>Q & A</h3>
+					<h3>Enjoy CUDA & Happy New Year!</h3>
 				</section>
 
 			</div>

@@ -1,0 +1,7 @@
+.zxx_align_box_6 li{height:128px; width:150px; padding:13px 0; float:left; margin-right:10px; border:1px solid #beceeb; text-align:center; font-size:0;}
+.zxx_align_box_6 li .alpha_img{height:100%; width:1px; vertical-align:middle;}
+.zxx_align_box_6 li .show_img{vertical-align:middle;}
+
+.zxx_align_box_4 li{float:left; margin-right:13px;list-style-type:none}
+.zxx_align_box_4 li div{display:table-cell; width:300px; height:300px; border:1px solid #beceeb; font-size:118px; text-align:center; vertical-align:middle;}
+.zxx_align_box_4 li div img{vertical-align:middle;}
