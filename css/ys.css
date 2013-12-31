@@ -5,3 +5,7 @@
 .zxx_align_box_4 li{float:left; margin-right:13px;list-style-type:none}
 .zxx_align_box_4 li div{display:table-cell; width:300px; height:300px; border:1px solid #beceeb; font-size:118px; text-align:center; vertical-align:middle;}
 .zxx_align_box_4 li div img{vertical-align:middle;}
+
+.align_box li{float:left; margin-right:13px;list-style-type:none}
+.align_box li div{display:table-cell; font-size:118px; text-align:center; vertical-align:middle;}
+.align_box li div img{vertical-align:middle;}

@@ -110,6 +110,7 @@ Device 0: "Tesla K20Xm"
   Max dimension size of a grid size    (x,y,z): (2147483647, 65535, 65535)
 					</code></pre>
 					</p>
+					<p>theoretical memory bandwidth: $2600 \times 10^{6} \times (384 / 8) \times 2 ÷ 1024^3 = 243 GB/s$</p>
 					<p>
 						Official HW Spec details: 
 						<br><a href="http://www.nvidia.com/object/tesla-servers.html">http://www.nvidia.com/object/tesla-servers.html</a>
@@ -129,25 +130,38 @@ CUDA cores, max block/grid size, shared mem
 # compile the source code to executable file
 $ nvcc a.cu -o a.out
 							</code></pre>
+							<!--
 							<li>Two-Stage compile</li>
 							<pre><code class="shell" data-trim>
 # compile the source code to object file
 $ nvcc -c a.cu -o a.o
 # link the object file(s) to executable file
 $ nvcc a.o -o a.out
-							</code></pre>							
+							</code></pre>
+							-->
+							<li>GPU and CPU code are compiled and linked separately</li>							
+						</ul>
+						<ul class="align_box fix">
+					    <li>
+							<div><img src="images/nvcc.png"  alt="ptx" /></div>
+							<div><img src="images/nvcc-options-for-separate-compilation.png"  alt="nvcc-flow" /></div>
+					    </li>
 						</ul>
 					</section>
 					<section>
 						<h2>Compile & Run CUDA</h2>
+						<!--
 						<img  src="images/nvcc.png" align=right border=0>
+						-->
 						<p>
 							The nvcc compiler will translate CUDA source code into Parallel Thread Execution (PTX) language in the intermediate phase.
-
+						</p>
+<!--
 						<pre><code class="shell" data-trim>
 # generate PTX file
 $ nvcc -ptx a.cu
 						</code></pre>
+-->						
 						<pre><code class="shell" data-trim>
 # keep all intermediate phase files
 $ nvcc a.cu -keep
@@ -155,10 +169,16 @@ $ nvcc a.cu -keep
 $ nvcc a.cu -save-temps
 						</code></pre>
 						<pre><code class="shell" data-trim>
+$ nvcc a.cu -keep
+$ ls
+a.cpp1.ii  a.cpp4.ii    a.cudafe1.c    a.cudafe1.stub.c  a.cudafe2.stub.c  a.hash       a.out
+a.cpp2.i   a.cu         a.cudafe1.cpp  a.cudafe2.c       a.fatbin          a.module_id  a.ptx
+a.cpp3.i   a.cu.cpp.ii  a.cudafe1.gpu  a.cudafe2.gpu     a.fatbin.c        a.o          a.sm_10.cubin
+						</code></pre>						
+						<pre><code class="shell" data-trim>
 # clean all intermediate phase files
 $ nvcc a.cu -keep -clean					
 						</code></pre>
-						</p>
 						<br clear=left>
 						<aside class="notes">
 						PTX provides a stable programming model and instruction set for general purpose parallel programming. It is designed to be efficient on NVIDIA GPUs.
@@ -183,13 +203,13 @@ ptxas info    : Used 6 registers, 32 bytes smem, 4 bytes cmem[1]
 						<p style="font-size:16px" align="left">
 							<ul>
 							<li>
-							register number: should be less than the number of available registers, otherwises the rest registers will be mapped into the local memory (off-chip).
+							<font color="#ff0000">register number</font>: should be less than the number of available registers, otherwises the rest registers will be mapped into the local memory (off-chip).
 							</li>
 							<li>
-							smem stands for shared memory.
+							<font color="#ff0000">smem</font> stands for shared memory.
 							</li>
 							<li>
-							cmem stands for constant memory. The bank-#1 constant memory stores 4 bytes of constant variables.
+							<font color="#ff0000">cmem</font> stands for constant memory. The bank-#1 constant memory stores 4 bytes of constant variables.
 							</li>
 							</ul>
 						</p>
@@ -291,6 +311,7 @@ As shown in the above example, the amounts of local and shared memory are listed
 						Recommended for checking errors of your program
 						-->
 						This tool checks the following memory errors of your program, and it also reports hardware exceptions encountered by the GPU.
+						<br>These errors may not cause program crash, but they could unexpected program and memory misusage. 
 						</p>
 <table summary="" id="supported-error-detection__memcheck-error-types" class="table" frame="border"rules="all" border="1" style="font-size: 20px;border-style:solid;border-color:black;line-height:120%">
                         <caption><span class="tablecap">Table . Memcheck reported error types</span></caption>
@@ -375,18 +396,18 @@ As shown in the above example, the amounts of local and shared memory are listed
                         </tbody>
                      </table>
 					</section>
+<!--
 					<section>
 						<h2>cuda-memcheck</h2>
 						<p>
 							These errors may not cause program crash, but they could unexpected program and memory misusage. 
 						</p>
-<!--
 						Usage:
 						<pre><code class="shell" data-trim>
 $ cuda-memcheck [executable-program]
 						</code></pre>
--->
 					</section>
+-->
 					<section>
 						<h2>cuda-memcheck</h2>
 						<h3>Example</h3>
@@ -491,11 +512,8 @@ $ cuda-memcheck ./a.out
 						<p>
 						Purpose: Query and modify GPU devices' state.
 						</p>
-						<p>
-						Example:
 						<pre><code class="shell" data-trim>
-$ nvidia-smi
-Wed Dec 25 08:16:21 2013       
+$ nvidia-smi       
 +------------------------------------------------------+                       
 | NVIDIA-SMI 5.319.37   Driver Version: 319.37         |                       
 |-------------------------------+----------------------+----------------------+
@@ -516,7 +534,6 @@ Wed Dec 25 08:16:21 2013
 |    0     33736  ./RS                                                  69MB  |
 +-----------------------------------------------------------------------------+
 						</code></pre>
-						</p>
 					</section>
 					<section>
 						<h2>nvidia-smi</h2>
@@ -526,6 +543,33 @@ Wed Dec 25 08:16:21 2013
 						<pre><code class="shell" data-trim>
 $ nvidia-smi -q -d [TEMPERATURE|MEMORY|POWER|CLOCK|...]
 						</code></pre>
+						<p>For example:</p>
+						<pre><code class="shell" data-trim>
+$ nvidia-smi -q -d POWER
+==============NVSMI LOG==============
+Timestamp                           : 
+Driver Version                      : 319.37
+Attached GPUs                       : 2
+GPU 0000:0B:00.0
+    Power Readings
+        Power Management            : Supported
+        Power Draw                  : 60.71 W
+        Power Limit                 : 235.00 W
+        Default Power Limit         : 235.00 W
+        Enforced Power Limit        : 235.00 W
+        Min Power Limit             : 150.00 W
+        Max Power Limit             : 235.00 W
+
+GPU 0000:85:00.0
+    Power Readings
+        Power Management            : Supported
+        Power Draw                  : 31.38 W
+        Power Limit                 : 235.00 W
+        Default Power Limit         : 235.00 W
+        Enforced Power Limit        : 235.00 W
+        Min Power Limit             : 150.00 W
+        Max Power Limit             : 235.00 W
+						</code></pre>
 					</section>
 				</section>
 
@@ -534,6 +578,15 @@ $ nvidia-smi -q -d [TEMPERATURE|MEMORY|POWER|CLOCK|...]
 						<h2>Lab Assignments</h2>
 						<p>
 						<ol>
+							<li>
+								Program-#1: increase each element in an array by one.
+								<br>(You are required to rewrite a CPU program into a CUDA one.)
+							</li>
+							<li>
+								Program-#2: use parallel reduction to calculate the sum of all the elements in an array.
+								<br>(You are required to fill in the blanks of a template CUDA program, and report your GPU bandwidth to TA after you finish each assignment.)
+							</li>
+							<ol>
 							<li>
 							SUM CUDA programming with "multi-kernel and shared memory"
 							</li>
@@ -546,26 +599,82 @@ $ nvidia-smi -q -d [TEMPERATURE|MEMORY|POWER|CLOCK|...]
 							<li>
 							SUM CUDA programming with "first add during load"
 							</li>
+							</ol>
 						</ol>
 						</p>
+						<!--
 						<p>
 						Report your GPU BW (bandwidth) to TA after you finish each assignment.
+						</p>
+						-->
+						<p>
+						0.2 scores per task.
 						</p>
 					</section>
 					<section>
 						<h2>Labs Assignment #1</h2>
+						<p>Rewrite the following CPU function into a CUDA kernel function and complete the main function by yourself:</p>
+						<pre><code class="cpp" data-trim>
+// increase one for all the elements
+void incrOneForAll(int *array, const int elemNum)
+{
+    int i;
+    for (i = 0; i < elemNum; ++i)
+    {
+        array[i] ++;
+    }
+}							
+						</pre></code>
+					</section>
+					<section>
+						<h2>Labs Assignment #2</h2>
 						<ul>
 							<li>
-							Given $10^{22}$ numbers, each block has the maximum block size $10^{10}$
+								Fill in the CUDA kernel function:
+								<pre><code class="cpp" data-trim>
+__global__ void reduce(int *g_idata, int *g_odata)
+{
+	extern __shared__ int sdata[];
+
+	// TODO: load the content of global memory to shared memory
+	// NOTE: synchronize all the threads after this step
+
+	// TODO: sum calculation
+	// NOTE: synchronize all the threads after each iteration
+
+	// TODO: write back the result into the corresponding entry of global memory
+	// NOTE: only one thread is enough to do the job
+}						
+								</pre></code>
+							</li>
+							<li>
+								Part of the main function is given, you are required to fill in the blanks according to the comments:
+								<pre><code class="cpp" data-trim>
+// parameters for the first kernel
+// TODO: set grid and block size
+// threadNum = ?
+// blockNum = ?
+int sMemSize = 1024 * sizeof(int);
+reduce<<< threadNum, blockNum, sMemSize >>>(d_idata, d_odata);						
+								</pre></code>
+							</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Labs Assignment #2</h2>
+						<ul>
+							<li>
+							Given $10^{22}$ INTs, each block has the maximum block size $10^{10}$
 							</li>
 							<li>
 							How to use 3 kernel to synchronize between iterations?
 							</li>							
 						</ul>
 						<img src="images/program-structure.png" alt="program structure"/>
+						<br>Hint: for "first add during global load" optimization (Assignment #2-4), the third kernel is unnecessary.
 					</section>
 					<section>
-						<h2>Labs Assignment #1</h2>
+						<h2>Labs Assignment #2-1</h2>
 						<ul>
 							<li>
 							Implement the naïve data parallelism assignment as follows:
@@ -574,16 +683,16 @@ $ nvidia-smi -q -d [TEMPERATURE|MEMORY|POWER|CLOCK|...]
 						<img src="images/task1.png" alt="task#1"/>
 					</section>
 					<section>
-						<h2>Labs Assignment #2</h2>
+						<h2>Labs Assignment #2-2</h2>
 						<ul>
 							<li>
-							Reduce number of diverge branches of your program:
+							Reduce number of active warps of your program:
 							</li>							
 						</ul>
 						<img src="images/task2.png" alt="task#2"/>
 					</section>
 					<section>
-						<h2>Labs Assignment #3</h2>
+						<h2>Labs Assignment #2-3</h2>
 						<ul>
 							<li>
 							Prevent shared memory access bank confliction:
@@ -592,10 +701,10 @@ $ nvidia-smi -q -d [TEMPERATURE|MEMORY|POWER|CLOCK|...]
 						<img src="images/task3.png" alt="task#3"/>
 					</section>
 					<section>
-						<h2>Labs Assignment #4</h2>
+						<h2>Labs Assignment #2-4</h2>
 						<ul>
 							<li>
-							Reduce the number of blocks in each kernel
+							Reduce the number of blocks in each kernel:
 							</li>
 							<li>
 							Notice:
